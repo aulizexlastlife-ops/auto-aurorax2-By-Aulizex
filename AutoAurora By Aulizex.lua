@@ -1,22 +1,12 @@
--- LocalScript inside StarterPlayerScripts
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 local backpack = player:WaitForChild("Backpack")
-local mouse = player:GetMouse()
 
+-- GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "TotemGui"
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
-
-local nameLabel = Instance.new("TextLabel")
-nameLabel.Size = UDim2.new(0, 200, 0, 40)
-nameLabel.Position = UDim2.new(0.5, -100, 0.5, -20)
-nameLabel.BackgroundTransparency = 1
-nameLabel.TextColor3 = Color3.fromRGB(128, 0, 255)
-nameLabel.Font = Enum.Font.SourceSansBold
-nameLabel.TextSize = 100
-nameLabel.Text = "Aulizex"
-nameLabel.Parent = ScreenGui
 
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 120, 0, 40)
@@ -30,40 +20,70 @@ ToggleButton.Text = "Totem: OFF"
 ToggleButton.Parent = ScreenGui
 
 local running = false
-
 ToggleButton.MouseButton1Click:Connect(function()
 	running = not running
 	ToggleButton.Text = running and "Totem: ON" or "Totem: OFF"
 end)
 
+-- ชื่อกลางจอ Aulizex
+local nameLabel = Instance.new("TextLabel")
+nameLabel.Size = UDim2.new(0, 200, 0, 40)
+nameLabel.Position = UDim2.new(0.5, -100, 0.5, -20)
+nameLabel.BackgroundTransparency = 1
+nameLabel.TextColor3 = Color3.fromRGB(128, 0, 255)
+nameLabel.Font = Enum.Font.SourceSansBold
+nameLabel.TextSize = 120
+nameLabel.Text = "Aulizex"
+nameLabel.Parent = ScreenGui
+nameLabel.TextTransparency = 1
+
+-- ฟังก์ชันใช้ Totem แบบเรียก Activate ของ Tool (เหมือนต้นฉบับ)
 local function useTotem(totemName)
-	local totem = backpack:FindFirstChild(totemName)
+	local totem = backpack:FindFirstChild(totemName) or player.Character:FindFirstChild(totemName)
 	if not totem then
-		warn(totemName .. " ไม่พบในกระเป๋า!")
+		warn(totemName .. " ไม่พบ!")
 		return
 	end
+
+	-- Equip Tool
 	player.Character.Humanoid:EquipTool(totem)
-	local remote = totem:FindFirstChild("Activate") or totem:FindFirstChildWhichIsA("RemoteEvent")
-	if remote then
-		remote:FireServer()
+	wait(0.2)
+
+	-- เรียก RemoteEvent ของ Tool ตรง ๆ
+	local remote = totem:FindFirstChild("Activate")
+	if remote and remote:IsA("RemoteEvent") then
+		for i = 1, math.random(3,5) do
+			remote:FireServer()
+			wait(math.random(100,500)/1000)
+		end
 	else
-		mouse1click()
+		-- fallback สำหรับเกมที่ใช้ LocalScript ของ Tool
+		for i = 1, math.random(3,5) do
+			totem:Activate() -- ใช้วิธีนี้เหมือนผู้เล่นกดใช้เอง
+			wait(math.random(100,500)/1000)
+		end
 	end
 end
 
+-- Loop Totem แบบสลับ + ดีเลย์สุ่ม
 spawn(function()
+	local totems = {"Sundial Totem", "Aurora Totem"}
+	local index = 1
 	while true do
 		if running then
-			useTotem("Sundial Totem")
-			wait(18)
-			useTotem("Aurora Totem")
-			wait(18)
+			useTotem(totems[index])
+			wait(math.random(1,5))
+			index = index + 1
+			if index > #totems then
+				index = 1
+			end
 		else
 			wait(1)
 		end
 	end
 end)
 
+-- ทำให้ลาก GUI ได้
 local dragging
 local dragInput
 local dragStart
@@ -80,7 +100,6 @@ ToggleButton.InputBegan:Connect(function(input)
 		dragging = true
 		dragStart = input.Position
 		startPos = ToggleButton.Position
-
 		input.Changed:Connect(function()
 			if input.UserInputState == Enum.UserInputState.End then
 				dragging = false
@@ -98,5 +117,23 @@ end)
 RunService.RenderStepped:Connect(function()
 	if dragging and dragInput then
 		update(dragInput)
+	end
+end)
+
+-- เฟดชื่อกลางจอ
+spawn(function()
+	local transparency = 1
+	local increment = -0.02
+	while true do
+		transparency = transparency + increment
+		if transparency <= 0 then
+			transparency = 0
+			increment = 0.02
+		elseif transparency >= 1 then
+			transparency = 1
+			increment = -0.02
+		end
+		nameLabel.TextTransparency = transparency
+		wait(0.03)
 	end
 end)
