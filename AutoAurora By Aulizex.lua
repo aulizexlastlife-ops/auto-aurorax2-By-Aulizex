@@ -32,12 +32,12 @@ nameLabel.Position = UDim2.new(0.5, -100, 0.5, -20)
 nameLabel.BackgroundTransparency = 1
 nameLabel.TextColor3 = Color3.fromRGB(128, 0, 255)
 nameLabel.Font = Enum.Font.SourceSansBold
-nameLabel.TextSize = 120
+nameLabel.TextSize = 60
 nameLabel.Text = "Aulizex"
 nameLabel.Parent = ScreenGui
 nameLabel.TextTransparency = 1
 
--- ฟังก์ชันใช้ Totem แบบเรียก Activate ของ Tool (เหมือนต้นฉบับ)
+-- ฟังก์ชันใช้ Totem แบบเรียก Activate ของ Tool
 local function useTotem(totemName)
 	local totem = backpack:FindFirstChild(totemName) or player.Character:FindFirstChild(totemName)
 	if not totem then
@@ -49,30 +49,29 @@ local function useTotem(totemName)
 	player.Character.Humanoid:EquipTool(totem)
 	wait(0.2)
 
-	-- เรียก RemoteEvent ของ Tool ตรง ๆ
+	-- เรียก RemoteEvent หรือ Activate ของ Tool
 	local remote = totem:FindFirstChild("Activate")
 	if remote and remote:IsA("RemoteEvent") then
 		for i = 1, math.random(3,5) do
 			remote:FireServer()
-			wait(math.random(100,500)/1000)
+			wait(0.2) -- รอเล็กน้อยระหว่างกด
 		end
 	else
-		-- fallback สำหรับเกมที่ใช้ LocalScript ของ Tool
 		for i = 1, math.random(3,5) do
-			totem:Activate() -- ใช้วิธีนี้เหมือนผู้เล่นกดใช้เอง
-			wait(math.random(100,500)/1000)
+			totem:Activate()
+			wait(0.2)
 		end
 	end
 end
 
--- Loop Totem แบบสลับ + ดีเลย์สุ่ม
+-- Loop Totem แบบรอคงที่ 18 วิ
 spawn(function()
 	local totems = {"Sundial Totem", "Aurora Totem"}
 	local index = 1
 	while true do
 		if running then
 			useTotem(totems[index])
-			wait(math.random(1,5))
+			wait(18) -- รอคงที่ 18 วิ
 			index = index + 1
 			if index > #totems then
 				index = 1
